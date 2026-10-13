@@ -1,0 +1,11 @@
+.env
+.venv
+data
+ops
+.git
+**/__pycache__
+eval
+tests
+docs
+scripts
+integrations

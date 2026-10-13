@@ -1,0 +1,17 @@
+# Production on a Nebius VM: the app plus a Cloudflare tunnel (no inbound ports open).
+# .env holds the app secrets and CLOUDFLARE_TUNNEL_TOKEN.
+services:
+  app:
+    build: .
+    image: agentgrow-bookings
+    env_file: .env
+    volumes: ["bookings-data:/app/data"]
+    restart: unless-stopped
+  tunnel:
+    image: cloudflare/cloudflared:2025.11.1
+    command: tunnel --no-autoupdate run
+    environment: [TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}]
+    depends_on: [app]
+    restart: unless-stopped
+volumes:
+  bookings-data:

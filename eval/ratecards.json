@@ -1,0 +1,9 @@
+{
+  "alignright-fees.jpg": [["New patient consultation", 1500], ["Follow-up adjustment", 1000], ["Spinal decompression", 1800],
+                          ["Dry needling", 800], ["Kinesio taping", 500], ["Sports injury session", 2000],
+                          ["Kids chiropractic", 900], ["Pregnancy care", 1400]],
+  "backfirst-table.jpg": [["Initial Assessment", 2000, 60], ["Adjustment", 1200, 20], ["Adjustment + Massage", 1800, 45],
+                          ["Decompression Therapy", 1500, 30], ["Posture Screening", 800, 30]],
+  "mehta-board-photo.jpg": [["Consultation", 800], ["Adjustment", 600], ["Back Pain Therapy", 900], ["Neck Therapy", 700],
+                            ["Physiotherapy Session", 500]]
+}

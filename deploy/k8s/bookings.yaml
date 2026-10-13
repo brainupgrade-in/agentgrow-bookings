@@ -1,0 +1,71 @@
+# AgentGrow Bookings on the NUC k3s cluster. Secret `bookings-env` is created from .env by scripts/deploy-nuc.sh (never committed).
+# One replica only: SQLite on a single volume, and the demo keeps sandboxes in memory.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agentgrow-bookings
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bookings-data
+  namespace: agentgrow-bookings
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookings
+  namespace: agentgrow-bookings
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # never two writers on the SQLite file
+  selector:
+    matchLabels: {app: bookings}
+  template:
+    metadata:
+      labels: {app: bookings}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: app
+          image: registry.gheware-ai.com/agentgrow-bookings:IMAGE_TAG
+          ports: [{containerPort: 8080, name: http}]
+          envFrom: [{secretRef: {name: bookings-env}}]
+          env:
+            - {name: BOOKINGS_DB, value: /app/data/bookings.db}
+          volumeMounts: [{name: data, mountPath: /app/data}]
+          resources:
+            requests: {cpu: 100m, memory: 192Mi}
+            limits: {memory: 512Mi}
+          readinessProbe:
+            httpGet: {path: /demo, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /demo, port: http}
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: bookings-data}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookings
+  namespace: agentgrow-bookings
+spec:
+  selector: {app: bookings}
+  ports: [{port: 8080, targetPort: http, name: http}]

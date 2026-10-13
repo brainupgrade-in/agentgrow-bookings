@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentGrow Bookings · live demo</title>
+<meta name="description" content="A WhatsApp front desk for chiropractic clinics, powered by NVIDIA Nemotron on Nebius Token Factory. Try it as a patient and as the clinic owner.">
+<style>
+:root{
+  --bg:#f4f1ea; --panel:#fffdf8; --ink:#1d2421; --muted:#68716c; --line:#e3ddd0;
+  --wa-bg:#efe7dd; --wa-in:#ffffff; --wa-out:#d9fdd3; --wa-head:#0b5c4a; --wa-head-ink:#fff;
+  --accent:#0b5c4a; --accent-2:#76b900; --chip:#e9f2ee; --chip-ink:#0b5c4a; --warn:#b4541a;
+  --slot:#e6f1ec; --slot-ink:#0b4a3c; --shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111614; --panel:#18201d; --ink:#e8ede9; --muted:#9aa59f; --line:#2a3430;
+  --wa-bg:#0d1512; --wa-in:#1f2a26; --wa-out:#11463a; --wa-head:#1a2c26; --wa-head-ink:#e8ede9;
+  --accent:#4cc9a0; --chip:#1f2c27; --chip-ink:#8fe0c3; --slot:#173a30; --slot-ink:#bdf0dc; --shadow:none;
+}}
+:root[data-theme="dark"]{
+  --bg:#111614; --panel:#18201d; --ink:#e8ede9; --muted:#9aa59f; --line:#2a3430;
+  --wa-bg:#0d1512; --wa-in:#1f2a26; --wa-out:#11463a; --wa-head:#1a2c26; --wa-head-ink:#e8ede9;
+  --accent:#4cc9a0; --chip:#1f2c27; --chip-ink:#8fe0c3; --slot:#173a30; --slot-ink:#bdf0dc; --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--line)}
+.brand{display:flex;flex-direction:column}
+.brand b{font-size:18px;letter-spacing:-.01em}
+.brand span{color:var(--muted);font-size:13px}
+.powered{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tag{border:1px solid var(--line);border-radius:999px;padding:2px 8px;background:var(--panel)}
+.tag.nv{border-color:var(--accent-2);color:var(--ink)}
+button{font:inherit;cursor:pointer}
+.reset{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 12px}
+.reset:hover{border-color:var(--accent)}
+main{display:grid;grid-template-columns:minmax(300px,380px) minmax(320px,1fr) minmax(300px,380px);gap:20px;padding:20px 24px;max-width:1400px;margin:0 auto}
+.tabs{display:none}
+.phone{display:flex;flex-direction:column;height:calc(100dvh - 120px);min-height:420px;background:var(--wa-bg);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line)}
+.phone-head{background:var(--wa-head);color:var(--wa-head-ink);padding:12px 14px;display:flex;gap:10px;align-items:center}
+.avatar{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;font-weight:600}
+.phone-head small{display:block;opacity:.75;font-size:12px}
+.chat{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:6px}
+.bubble{max-width:82%;padding:7px 10px 6px;border-radius:10px;white-space:pre-wrap;word-wrap:break-word;box-shadow:0 1px 1px rgba(0,0,0,.05)}
+.in{align-self:flex-start;background:var(--wa-in);border-top-left-radius:3px}
+.out{align-self:flex-end;background:var(--wa-out);border-top-right-radius:3px}
+.sys{align-self:center;background:transparent;color:var(--muted);font-size:12px;box-shadow:none;text-align:center;max-width:95%}
+.meta{display:block;text-align:right;font-size:11px;color:var(--muted);margin-top:2px}
+.typing{align-self:flex-start;color:var(--muted);font-size:13px;padding:6px 10px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 10px 2px;background:var(--wa-bg);scrollbar-width:thin}
+.chip{border:0;background:var(--chip);color:var(--chip-ink);border-radius:999px;padding:5px 10px;font-size:13px;white-space:nowrap;flex:none}
+.chip:hover{filter:brightness(.97)}
+form.compose{display:flex;gap:8px;padding:10px;background:var(--wa-bg)}
+form.compose input{flex:1;border:1px solid var(--line);border-radius:999px;padding:10px 14px;background:var(--panel);color:var(--ink);font:inherit;min-width:0}
+.bubble img{display:block;max-width:100%;max-height:220px;border-radius:6px;margin-bottom:4px}
+.attach{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--panel);border:1px solid var(--line);cursor:pointer;font-size:18px;flex:none}
+.attach:focus-within{outline:2px solid var(--accent)}
+.attach input{position:absolute;width:1px;height:1px;opacity:0}
+.profile{font-size:13px;color:var(--muted);margin:-8px 0 14px}
+.profile a{color:var(--accent)}
+form.compose button{border:0;border-radius:50%;width:42px;height:42px;background:var(--accent);color:#fff;font-size:18px}
+form.compose button:disabled{opacity:.5;cursor:default}
+.board{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);height:calc(100dvh - 120px);min-height:420px;overflow-y:auto}
+.board h2{font-size:15px;margin:0 0 2px}
+.board .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.day{margin-bottom:16px}
+.day h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 6px}
+.empty{color:var(--muted);font-size:13px;padding:8px 0}
+.bk{display:grid;grid-template-columns:96px 1fr auto;gap:10px;align-items:center;background:var(--slot);color:var(--slot-ink);border-radius:10px;padding:8px 10px;margin-bottom:6px;animation:pop .35s ease}
+.bk .t{font-variant-numeric:tabular-nums;font-weight:600}
+.bk .c{font-size:12px;opacity:.8}
+@keyframes pop{from{transform:scale(.97);opacity:0}to{transform:none;opacity:1}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 18px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.stat b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.menu{display:grid;grid-template-columns:1fr auto;gap:2px 12px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.menu b{color:var(--ink);font-weight:500}
+.how{font-size:13px;color:var(--muted);border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.how ol{margin:6px 0 0;padding-left:18px}
+.who{display:flex;gap:6px;padding:8px 10px 0;background:var(--wa-bg)}
+.who button{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 8px;font-size:13px;position:relative}
+.who button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.who button.dot::after{content:"";position:absolute;top:5px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--warn)}
+.chat[hidden]{display:none}
+.bubble a{color:var(--accent);word-break:break-all}
+.badge{display:inline-block;font-size:11px;border-radius:999px;padding:0 7px;margin-left:4px;background:var(--chip);color:var(--chip-ink);font-weight:500}
+.badge.warn{background:#fde7d6;color:#8a3b0f}
+.sim{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px;font-size:13px;color:var(--muted)}
+.sim button:disabled{opacity:.5;cursor:default}
+.log{font-size:13px;color:var(--muted);margin:0 0 14px;padding-left:18px}
+.log:empty{display:none}
+.list{font-size:13px;margin:0 0 16px}
+.list div{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.stat.rec b{color:var(--accent)}
+@media (max-width:1000px){
+  main{grid-template-columns:1fr;padding:12px 16px}
+  .tabs{display:flex;gap:6px;padding:10px 16px 0;position:sticky;top:0;background:var(--bg);z-index:2}
+  .tabs button{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:8px}
+  .tabs button[aria-selected="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+  .pane{display:none}.pane.active{display:flex}.board.pane.active{display:block}
+  .phone,.board{height:calc(100dvh - 160px)}
+  header{padding:12px 16px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><b>AgentGrow Bookings</b><span>The WhatsApp front desk for chiropractic clinics: books patients, keeps care plans on track, flags emergencies.</span></div>
+  <div class="powered"><span class="tag nv">NVIDIA Nemotron 3 Super</span><span class="tag">Nebius Token Factory</span><span class="tag">WhatsApp Cloud API</span>
+    <button class="reset" id="setup" title="Start with an empty clinic and set it up from a photo of its fee card">Set up from a photo</button>
+    <button class="reset" id="reset" title="Start over with the demo clinic">Reset demo</button></div>
+</header>
+<nav class="tabs" role="tablist">
+  <button role="tab" data-pane="customer" aria-selected="true">Patient</button>
+  <button role="tab" data-pane="board" aria-selected="false">Clinic</button>
+  <button role="tab" data-pane="owner" aria-selected="false">Owner</button>
+</nav>
+<main>
+  <section class="phone pane active" id="customer" aria-label="Patient WhatsApp">
+    <div class="phone-head"><div class="avatar">S</div><div><b id="biz-name">SpineCare Chiropractic</b><small>business account · replies in seconds</small></div></div>
+    <div class="who" role="group" aria-label="Which patient you are">
+      <button data-pt="priya" aria-pressed="true">Priya · new patient</button>
+      <button data-pt="arjun" aria-pressed="false">Arjun · returning</button>
+    </div>
+    <div class="chat" id="chat-priya" aria-live="polite">
+      <div class="bubble sys">You are Priya, a new patient. Ask in English, Hindi or Hinglish.</div>
+    </div>
+    <div class="chat" id="chat-arjun" aria-live="polite" hidden>
+      <div class="bubble sys">You are Arjun. Your last adjustment was over 2 weeks ago and you once missed an appointment. Press "Run daily check" on the Clinic board to see the follow-up reminder.</div>
+    </div>
+    <div class="chips" id="chips-customer"></div>
+    <form class="compose" data-role="customer"><input placeholder="Message SpineCare Chiropractic" maxlength="500" aria-label="Message as patient"><button aria-label="Send">➤</button></form>
+  </section>
+
+  <section class="board pane" id="board" aria-label="Clinic schedule">
+    <h2 id="board-title">Schedule</h2>
+    <p class="sub" id="board-sub"></p>
+    <p class="profile" id="profile" hidden></p>
+    <div class="stats">
+      <div class="stat"><b id="st-bookings">0</b><span>bookings</span></div>
+      <div class="stat"><b id="st-inr">₹0</b><span>booked revenue</span></div>
+      <div class="stat rec"><b id="st-rec">₹0</b><span>recovered</span></div>
+      <div class="stat"><b id="st-latency">–</b><span>avg model step</span></div>
+    </div>
+    <div class="sim" role="group" aria-label="Make time pass">Time passes:
+      <button class="reset" data-ev="cancel" title="One of the other patients cancels; the agent offers the slot to the waitlist">Another patient cancels</button>
+      <button class="reset" data-ev="tick" title="The morning job: follow-up reminders, deposit checks">Run daily check</button>
+      <button class="reset" data-ev="report" title="The Monday message to the owner">Weekly ₹ report</button>
+    </div>
+    <ul class="log" id="log"></ul>
+    <div id="days"></div>
+    <div id="waitlist"></div>
+    <div id="recovered"></div>
+    <div class="menu" id="menu"></div>
+    <div class="how"><b>What happens on each message</b>
+      <ol><li>The message goes to the same agent that answers WhatsApp at +1 555 658 6330.</li>
+      <li>Nemotron 3 Super (on Nebius Token Factory) reads it and calls tools: services, free slots, book, cancel, waitlist, ask the doctor. Red-flag symptoms are never booked: the patient is sent to emergency and the doctor is alerted.</li>
+      <li>Only the tools touch the calendar, so the model cannot invent prices or double-book a practitioner. A fee-card photo is read by Qwen3.8-27B on Token Factory; Nemotron does everything else.</li>
+      <li>Recovery runs on its own: a cancelled slot is offered to the waitlist, overdue patients get a follow-up reminder, and after a no-show the next booking needs a ₹300 deposit (Cashfree <i>test mode</i>: pay with any Cashfree test card or test UPI). The buttons above make time pass.</li></ol>
+      <p id="model-line"></p></div>
+  </section>
+
+  <section class="phone pane" id="owner" aria-label="Owner WhatsApp">
+    <div class="phone-head"><div class="avatar">AG</div><div><b>AgentGrow assistant</b><small>the owner's side · no dashboard needed</small></div></div>
+    <div class="chat" id="chat-owner" aria-live="polite">
+      <div class="bubble sys">You are the clinic owner (the chiropractor). Questions the agent can't decide (discounts, packages, red-flag patients) arrive here. Send a photo of your fee card to set up or change the services.</div>
+    </div>
+    <div class="chips" id="chips-owner"></div>
+    <form class="compose" data-role="owner"><label class="attach" title="Send a fee-card photo">📎<input type="file" accept="image/*" id="photo" aria-label="Send a fee-card photo"></label><input placeholder="Message your assistant" maxlength="500" aria-label="Message as owner"><button aria-label="Send">➤</button></form>
+  </section>
+</main>
+<script>
+const PATIENT_CHIPS = {
+  priya: w => [`${w} shaam 6 baje appointment chahiye, pehli baar aa rahi hoon`, "haan, waitlist pe daal do", "haan, book kar do",
+               "consultation kitne ka hai?", "6 sessions ke package pe discount milega?", "gir gayi thi, pair mein numbness hai"],
+  arjun: w => ["haan, kal subah 11 baje book kar do", "maine pay kar diya", "mera appointment cancel kar do"],
+};
+const OWNER_CHIPS = ["haan, 10% de do", "nahi, discount nahi hai", "is hafte kitna recover hua?", "aaj ka schedule?", "ok",
+                     "AlignRight Chiropractic, Whitefield, Bangalore", "haan, save kar do"];
+const CARDS = [["📷 Printed fee card", "alignright-fees.jpg"], ["📷 Fee table with durations", "backfirst-table.jpg"], ["📷 Hindi board, phone photo", "mehta-board-photo.jpg"]];
+const KIND = {waitlist_fill: "Cancelled slot refilled from the waitlist", nudge: "Back on care plan after a reminder", deposit: "No-show deposit collected"};
+let sid; try { sid = localStorage.getItem("agb-sid"); } catch (e) {}
+if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)); try { localStorage.setItem("agb-sid", sid); } catch (e) {} }
+let pt = "priya", word = "kal", ownerSeen = 0, pendingDeposit = false;
+const pushSeen = {priya: 0, arjun: 0};
+
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\*(.+?)\*/g, "<b>$1</b>")
+  .replace(/(https:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const now = () => new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+const inr = n => "₹" + n.toLocaleString("en-IN");
+
+// target: "owner", "priya" or "arjun"
+function bubble(target, cls, text, image) {
+  const chat = document.getElementById("chat-" + target);
+  const el = document.createElement("div");
+  el.className = "bubble " + cls;
+  el.innerHTML = (image ? `<img alt="fee card photo" src="${image}">` : "") + fmt(text) + (cls === "sys" ? "" : `<span class="meta">${now()}</span>`);
+  chat.appendChild(el); chat.scrollTop = chat.scrollHeight;
+  return el;
+}
+
+async function send(role, text, image) {
+  const target = role === "owner" ? "owner" : pt, patient = pt;
+  const form = document.querySelector(`form[data-role="${role}"]`);
+  form.querySelector("button").disabled = true;
+  bubble(target, "out", text, image);
+  const chat = document.getElementById("chat-" + target);
+  const typing = document.createElement("div"); typing.className = "typing"; typing.textContent = "typing…";
+  chat.appendChild(typing); chat.scrollTop = chat.scrollHeight;
+  const t0 = performance.now();
+  try {
+    const r = await fetch("/api/sim/message", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({sid, role, patient, text, image})});
+    const data = await r.json();
+    typing.remove();
+    if (!r.ok) { bubble(target, "sys", data.detail || "Something went wrong."); return; }
+    bubble(target, "in", data.reply || "…");
+    bubble(target, "sys", `answered in ${((performance.now() - t0) / 1000).toFixed(1)} s`);
+    showInbox(data);
+  } catch (e) { typing.remove(); bubble(target, "sys", "Network error, try again."); }
+  finally { form.querySelector("button").disabled = false; refresh(); }
+}
+
+// Messages the clinic sends on its own: owner answers, waitlist offers, reminders, deposit confirmations, reports.
+// Returns the patients who got something new.
+function showInbox(data) {
+  (data.owner_inbox || []).slice(ownerSeen).forEach(m => bubble("owner", "in", m));
+  ownerSeen = Math.max(ownerSeen, (data.owner_inbox || []).length);
+  const got = [];
+  for (const [p, msgs] of Object.entries(data.pushes || {})) {
+    msgs.slice(pushSeen[p]).forEach(m => bubble(p, "in", m));
+    if (msgs.length > pushSeen[p]) { got.push(p); if (p !== pt) document.querySelector(`.who button[data-pt="${p}"]`).classList.add("dot"); }
+    pushSeen[p] = Math.max(pushSeen[p], msgs.length);
+  }
+  return got;
+}
+
+async function event(kind) {
+  const buttons = document.querySelectorAll(".sim button");
+  buttons.forEach(b => b.disabled = true);
+  const log = document.getElementById("log");
+  const li = document.createElement("li"); li.textContent = "…"; log.prepend(li);
+  try {
+    const r = await fetch("/api/sim/event", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({sid, kind})});
+    const data = await r.json();
+    if (!r.ok) { li.textContent = data.detail || "Something went wrong."; return; }
+    li.textContent = data.event;
+    const got = showInbox(data);
+    if (got.length && !got.includes(pt)) choose(got[0]);  // show the phone that just received the message
+  } catch (e) { li.textContent = "Network error, try again."; }
+  finally { buttons.forEach(b => b.disabled = false); refresh(); }
+}
+
+function choose(p) {
+  pt = p;
+  document.querySelectorAll(".who button").forEach(b => { b.setAttribute("aria-pressed", b.dataset.pt === p); if (b.dataset.pt === p) b.classList.remove("dot"); });
+  for (const k of Object.keys(pushSeen)) document.getElementById("chat-" + k).hidden = k !== p;
+  renderChips();
+}
+
+function renderChips() {
+  const box = document.getElementById("chips-customer"); box.innerHTML = "";
+  PATIENT_CHIPS[pt](word).forEach(c => { const b = document.createElement("button"); b.className = "chip"; b.textContent = c; b.onclick = () => send("customer", c); box.appendChild(b); });
+}
+
+// Photos are downsized in the browser (max 1600 px JPEG) so uploads stay small; the vision model reads them fine.
+function shrink(blob) {
+  return new Promise((ok, fail) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src);
+      ok(c.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => fail(new Error("not an image")); img.src = URL.createObjectURL(blob);
+  });
+}
+async function sendPhoto(blob) {
+  try { send("owner", "", await shrink(blob)); } catch (e) { bubble("owner", "sys", "That file isn't an image we can read."); }
+}
+
+function badges(b) {
+  return (b.source === "waitlist" ? '<span class="badge">refilled from waitlist</span>' : "")
+    + (b.source === "nudge" ? '<span class="badge">after reminder</span>' : "")
+    + (b.deposit_status === "pending" ? '<span class="badge warn">deposit pending</span>' : "")
+    + (b.deposit_status === "paid" ? '<span class="badge">deposit paid</span>' : "");
+}
+
+async function refresh() {
+  const s = await (await fetch("/api/sim/state?sid=" + encodeURIComponent(sid))).json();
+  document.getElementById("biz-name").textContent = s.business.name;
+  document.getElementById("board-title").textContent = s.business.name;
+  document.querySelector('form[data-role="customer"] input').placeholder = "Message " + s.business.name;
+  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const closed = s.business.closed_weekdays ? " · closed " + s.business.closed_weekdays.split(",").map(d => DAYS[+d]).join(", ") : "";
+  document.getElementById("board-sub").textContent = `Open ${s.business.open_time}–${s.business.close_time}${closed} · ${s.business.chairs} practitioner${s.business.chairs > 1 ? "s" : ""} · next 3 days`;
+  const prof = document.getElementById("profile");
+  prof.hidden = !(s.business.address || s.business.website);
+  prof.innerHTML = [s.business.address && esc(s.business.address),
+    s.business.website && /^https?:\/\//.test(s.business.website) && `<a href="${esc(s.business.website)}" target="_blank" rel="noopener">${esc(s.business.website.replace(/^https?:\/\//, ""))}</a>`].filter(Boolean).join(" · ");
+  const all = s.days.flatMap(d => d.bookings);
+  document.getElementById("st-bookings").textContent = all.length;
+  document.getElementById("st-inr").textContent = inr(all.reduce((a, b) => a + b.price_inr, 0));
+  document.getElementById("st-rec").textContent = inr(s.recovered.reduce((a, r) => a + r.amount_inr, 0));
+  const calls = s.llm.reduce((a, x) => a + x.n, 0);
+  const ms = calls ? s.llm.reduce((a, x) => a + x.ms * x.n, 0) / calls : 0;
+  document.getElementById("st-latency").textContent = calls ? (ms / 1000).toFixed(1) + " s" : "–";
+  document.getElementById("model-line").textContent = calls
+    ? s.llm.map(x => `${x.model.split("/").pop()}: ${x.n} calls, ${x.tin + x.tout} tokens`).join(" · ") + ` · ${s.messages_left} demo messages left`
+    : `${s.messages_left} demo messages left in this sandbox.`;
+  document.getElementById("days").innerHTML = s.days.map(d => `<div class="day"><h3>${esc(d.label)}</h3>${
+    d.bookings.length ? d.bookings.map(b => `<div class="bk"><span class="t">${b.time}–${b.end}</span><span>${esc(b.service)}${badges(b)}<br><span class="c">${esc(b.customer)} · practitioner ${b.chair}</span></span><b>₹${b.price_inr}</b></div>`).join("")
+    : '<div class="empty">No bookings yet</div>'}</div>`).join("");
+  document.getElementById("waitlist").innerHTML = s.waitlist.length ? '<div class="day"><h3>Waitlist</h3><div class="list">' + s.waitlist.map(w =>
+    `<div><span>${esc(w.customer)} · ${esc(w.service)}</span><span>${w.status === "offered" ? "offered " + esc(w.offered_start.slice(11)) : esc(w.day)}</span></div>`).join("") + "</div></div>" : "";
+  document.getElementById("recovered").innerHTML = s.recovered.length ? '<div class="day"><h3>Recovered revenue</h3><div class="list">' + s.recovered.map(r =>
+    `<div><span>${KIND[r.kind]} · ${esc(r.customer)}</span><b>${inr(r.amount_inr)}</b></div>`).join("") + "</div></div>" : "";
+  document.getElementById("menu").innerHTML = s.services.length
+    ? s.services.map(x => `<b>${esc(x.name)}</b><span>₹${x.price_inr} · ${x.duration_min} min</span>`).join("")
+    : '<span class="empty">No services yet. Send a fee-card photo from the Owner phone (📎 or a sample card).</span>';
+  pendingDeposit = s.pending_deposit;
+  const w = s.full_evening ? s.full_evening.word : "kal";
+  if (w !== word) { word = w; renderChips(); }
+  showInbox(s);
+  showSetupHint(s.services);
+}
+
+for (const [label, file] of CARDS) {
+  const b = document.createElement("button"); b.className = "chip"; b.textContent = label;
+  b.onclick = async () => sendPhoto(await (await fetch("/static/ratecards/" + file)).blob());
+  document.getElementById("chips-owner").appendChild(b);
+}
+OWNER_CHIPS.forEach(c => { const b = document.createElement("button"); b.className = "chip"; b.textContent = c; b.onclick = () => send("owner", c); document.getElementById("chips-owner").appendChild(b); });
+renderChips();
+document.getElementById("photo").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) sendPhoto(f); };
+for (const role of ["customer", "owner"]) {
+  document.querySelector(`form[data-role="${role}"]`).addEventListener("submit", e => {
+    e.preventDefault(); const input = e.target.querySelector('input:not([type="file"])'); const v = input.value.trim(); if (v) { input.value = ""; send(role, v); }
+  });
+}
+document.querySelectorAll(".who button").forEach(b => b.onclick = () => choose(b.dataset.pt));
+document.querySelectorAll(".sim button").forEach(b => b.onclick = () => event(b.dataset.ev));
+async function reset(blank) {
+  await fetch("/api/sim/reset", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({sid, blank})});
+  try { blank ? sessionStorage.setItem("agb-setup", "1") : sessionStorage.removeItem("agb-setup"); } catch (e) {}
+  location.reload();
+}
+document.getElementById("reset").onclick = () => reset(false);
+document.getElementById("setup").onclick = () => reset(true);
+let setupHint = false; try { setupHint = !!sessionStorage.getItem("agb-setup"); } catch (e) {}
+function showSetupHint(services) {
+  if (!setupHint) return;
+  setupHint = false;
+  if (services.length) return;  // stale flag: this sandbox already has services
+  bubble("owner", "sys", "New clinic with no services yet. Tap a 📷 sample fee card below (or 📎 your own photo), check the list, reply ok. Then tell the assistant your clinic's name and area to fill in the address.");
+  document.querySelector('.tabs button[data-pane="owner"]').click();
+}
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("active", p.id === b.dataset.pane));
+});
+// While a deposit link is open (maybe being paid in another tab), keep the page current.
+setInterval(() => { if (pendingDeposit && !document.hidden) refresh(); }, 6000);
+refresh();
+</script>
+</body>
+</html>
