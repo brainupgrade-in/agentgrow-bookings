@@ -3,7 +3,7 @@
 > Submission to the [Nebius x NVIDIA Global AI Hackathon 2026](https://nebiusglobalaihackathon.devpost.com), **Track: Best Apps & Agents**.
 > License: [Apache 2.0](LICENSE). Built from scratch between 13 and 30 Oct 2026.
 
-**Live demo (no login): https://bookings.agentgrow.io/demo** · **Video (< 3 min):** _link added at submission_
+**Live demo (no login): https://bookings.agentgrow.io/demo** · **Video (< 3 min): https://youtu.be/Qs-CC4AMCt0**
 
 ![The demo after one run: a waitlist refill, a follow-up reminder with a deposit hold, and the owner's weekly ₹ report](docs/img/demo.jpg)
 
